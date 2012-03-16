@@ -2158,7 +2158,6 @@ THREE.ColladaLoader = function () {
 	};
 
 	function Mesh( geometry ) {
-
 		this.geometry = geometry.id;
 		this.primitives = [];
 		this.vertices = null;
@@ -2839,6 +2838,7 @@ THREE.ColladaLoader = function () {
 
 		}
 
+		console.log(this);
 		return this;
 
 	};

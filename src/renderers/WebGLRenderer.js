@@ -617,6 +617,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		geometryGroup.__vertexArray = new Float32Array( nvertices * 3 );
 
+
 		if ( normalType ) {
 
 			geometryGroup.__normalArray = new Float32Array( nvertices * 3 );
@@ -1360,6 +1361,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
+		console.log("set mesh buffers");
+
 		var normalType = bufferGuessNormalType( material ),
 		vertexColorType = bufferGuessVertexColorType( material ),
 		uvType = bufferGuessUVType( material ),
@@ -1448,7 +1451,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 		morphTargets = geometry.morphTargets,
 		morphNormals = geometry.morphNormals;
 
+		console.log("fill....");
+
 		if ( dirtyVertices ) {
+
+
 
 			for ( f = 0, fl = chunk_faces3.length; f < fl; f ++ ) {
 
@@ -2786,7 +2793,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			_gl.bufferData( _gl.ARRAY_BUFFER, object.positionArray, _gl.DYNAMIC_DRAW );
 			_gl.enableVertexAttribArray( program.attributes.position );
 			_gl.vertexAttribPointer( program.attributes.position, 3, _gl.FLOAT, false, 0, 0 );
-
+			console.log("has position");
 		}
 
 		if ( object.hasNormal ) {
@@ -2842,6 +2849,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
+		//console.log("nope: " + object.count);
 		_gl.drawArrays( _gl.TRIANGLES, 0, object.count );
 
 		object.count = 0;
@@ -2960,6 +2968,8 @@ THREE.WebGLRenderer = function ( parameters ) {
 			updateBuffers = true;
 
 		}
+
+
 
 		// vertices
 
@@ -3146,6 +3156,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 			_this.info.render.calls ++;
 
 		}
+
 
 	};
 
@@ -3764,7 +3775,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		for ( var o = 0, ol = scene.__webglObjects.length; o < ol; o ++ ) {
 
-			updateObject( scene.__webglObjects[ o ].object );
+			this.updateObject( scene.__webglObjects[ o ].object );
 
 		}
 
@@ -3875,7 +3886,11 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		if ( ! object.__webglActive ) {
 
-			if ( object instanceof THREE.Mesh ) {
+			if ( THREE.MarchingCubes !== undefined && object instanceof THREE.MarchingCubes || object.immediateRenderCallback ) {
+
+				addBufferImmediate( scene.__webglObjectsImmediate, object );
+
+			} else if ( object instanceof THREE.Mesh ) {
 
 				geometry = object.geometry;
 
@@ -3901,10 +3916,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 				geometry = object.geometry;
 				addBuffer( scene.__webglObjects, geometry, object );
-
-			} else if ( THREE.MarchingCubes !== undefined && object instanceof THREE.MarchingCubes || object.immediateRenderCallback ) {
-
-				addBufferImmediate( scene.__webglObjectsImmediate, object );
 
 			} else if ( object instanceof THREE.Sprite ) {
 
@@ -3949,12 +3960,14 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	// Objects updates
 
-	function updateObject ( object ) {
+	this.updateObject = function ( object ) {
 
 		var geometry = object.geometry,
 			geometryGroup, customAttributesDirty, material;
 
 		if ( object instanceof THREE.Mesh ) {
+
+
 
 			if ( geometry instanceof THREE.BufferGeometry ) {
 
@@ -4086,10 +4099,14 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	function removeObject ( object, scene ) {
 
-		if ( object instanceof THREE.Mesh  ||
-			 object instanceof THREE.ParticleSystem ||
-			 object instanceof THREE.Ribbon ||
-			 object instanceof THREE.Line ) {
+		if ( object instanceof THREE.MarchingCubes || object.immediateRenderCallback ) {
+
+			removeInstances( scene.__webglObjectsImmediate, object );
+
+		} else if ( object instanceof THREE.Mesh  ||
+			        object instanceof THREE.ParticleSystem ||
+			        object instanceof THREE.Ribbon ||
+			        object instanceof THREE.Line ) {
 
 			removeInstances( scene.__webglObjects, object );
 
@@ -4100,10 +4117,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 		} else if ( object instanceof THREE.LensFlare ) {
 
 			removeInstancesDirect( scene.__webglFlares, object );
-
-		} else if ( object instanceof THREE.MarchingCubes || object.immediateRenderCallback ) {
-
-			removeInstances( scene.__webglObjectsImmediate, object );
 
 		}
 
