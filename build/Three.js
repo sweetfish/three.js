@@ -10692,7 +10692,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	function bufferGuessNormalType ( material ) {
 
 		// only MeshBasicMaterial and MeshDepthMaterial don't need normals
-
+		return true; // Temporary fix so that override material gets normals
 		if ( ( material instanceof THREE.MeshBasicMaterial && !material.envMap ) || material instanceof THREE.MeshDepthMaterial ) {
 
 			return false;
@@ -10726,7 +10726,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 	function bufferGuessUVType ( material ) {
 
 		// material must use some texture to require uvs
-
+		return true; // Temporary fix so that override material gets UV
 		if ( material.map || material.lightMap || material instanceof THREE.ShaderMaterial ) {
 
 			return true;
@@ -11278,8 +11278,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		}
 
-		console.log("set mesh buffers");
-
 		var normalType = bufferGuessNormalType( material ),
 		vertexColorType = bufferGuessVertexColorType( material ),
 		uvType = bufferGuessUVType( material ),
@@ -11367,8 +11365,6 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 		morphTargets = geometry.morphTargets,
 		morphNormals = geometry.morphNormals;
-
-		console.log("fill....");
 
 		if ( dirtyVertices ) {
 
@@ -13325,8 +13321,16 @@ THREE.WebGLRenderer = function ( parameters ) {
 			this.setDepthWrite( scene.overrideMaterial.depthWrite );
 			setPolygonOffset( scene.overrideMaterial.polygonOffset, scene.overrideMaterial.polygonOffsetFactor, scene.overrideMaterial.polygonOffsetUnits );
 
-			renderObjects( scene.__webglObjects, false, "", camera, lights, fog, true, scene.overrideMaterial );
-			renderObjectsImmediate( scene.__webglObjectsImmediate, "", camera, lights, fog, false, scene.overrideMaterial );
+			//renderObjects( scene.__webglObjects, false, "", camera, lights, fog, true, scene.overrideMaterial );
+			//renderObjectsImmediate( scene.__webglObjectsImmediate, "", camera, lights, fog, false, scene.overrideMaterial );
+
+			renderObjects( scene.__webglObjects, true, "opaque", camera, lights, fog, false, scene.overrideMaterial );
+			renderObjectsImmediate( scene.__webglObjectsImmediate, "opaque", camera, lights, fog, false, scene.overrideMaterial );
+
+			// transparent pass (back-to-front order)
+
+			renderObjects( scene.__webglObjects, false, "transparent", camera, lights, fog, true, scene.overrideMaterial );
+			renderObjectsImmediate( scene.__webglObjectsImmediate, "transparent", camera, lights, fog, true, scene.overrideMaterial );
 
 		} else {
 
@@ -26819,7 +26823,7 @@ THREE.BinaryLoader.prototype.loadAjaxBuffers = function ( json, callback, binary
 
 			if ( xhr.status == 200 || xhr.status == 0 ) {
 
-				THREE.BinaryLoader.prototype.createBinModel( xhr.response, callback, texturePath, json.materials );
+				THREE.BinaryLoader.prototype.createBinModel( xhr.response, callback, texturePath, json );
 
 			} else {
 
@@ -26857,7 +26861,8 @@ THREE.BinaryLoader.prototype.loadAjaxBuffers = function ( json, callback, binary
 
 // Binary AJAX parser
 
-THREE.BinaryLoader.prototype.createBinModel = function ( data, callback, texturePath, materials ) {
+THREE.BinaryLoader.prototype.createBinModel = function ( data, callback, texturePath, json ) {
+	var materials = json.materials;
 
 	var Model = function ( texturePath ) {
 
@@ -27504,7 +27509,7 @@ THREE.BinaryLoader.prototype.createBinModel = function ( data, callback, texture
 	Model.prototype = new THREE.Geometry();
 	Model.prototype.constructor = Model;
 
-	callback( new Model( texturePath ) );
+	callback( new Model( texturePath ), json );
 
 };
 /**

@@ -79,7 +79,7 @@ THREE.BinaryLoader.prototype.loadAjaxBuffers = function ( json, callback, binary
 
 			if ( xhr.status == 200 || xhr.status == 0 ) {
 
-				THREE.BinaryLoader.prototype.createBinModel( xhr.response, callback, texturePath, json.materials );
+				THREE.BinaryLoader.prototype.createBinModel( xhr.response, callback, texturePath, json );
 
 			} else {
 
@@ -117,7 +117,8 @@ THREE.BinaryLoader.prototype.loadAjaxBuffers = function ( json, callback, binary
 
 // Binary AJAX parser
 
-THREE.BinaryLoader.prototype.createBinModel = function ( data, callback, texturePath, materials ) {
+THREE.BinaryLoader.prototype.createBinModel = function ( data, callback, texturePath, json ) {
+	var materials = json.materials;
 
 	var Model = function ( texturePath ) {
 
@@ -764,6 +765,6 @@ THREE.BinaryLoader.prototype.createBinModel = function ( data, callback, texture
 	Model.prototype = new THREE.Geometry();
 	Model.prototype.constructor = Model;
 
-	callback( new Model( texturePath ) );
+	callback( new Model( texturePath ), json );
 
 };
